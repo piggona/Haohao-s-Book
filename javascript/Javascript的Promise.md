@@ -12,7 +12,7 @@
 
 - 首先建立一个实用函数:
 
-  ```
+  ```javascript
   function test(resolve,reject){
       log('start new Promise...');
       var timeOut = Math.random() * 2;

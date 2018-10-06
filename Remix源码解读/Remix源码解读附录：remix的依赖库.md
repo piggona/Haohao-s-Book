@@ -216,11 +216,292 @@ const serializedTx = tx.serialize()
     - `prototype.address`:钱包的公开地址
     - `prototype.privateKey`:钱包的私钥
     - `prototype.provider`:钱包所对应的provider
-    - `prototype.mnemonic`:
+    - `prototype.mnemonic`:钱包对应的助记词
+    - `prototype.path`:钱包对应的mnemonic path
 
-  - Signers(签名)
+  - Signing(钱包的签名操作)：
+
+    - `prototype.sign(transaction)`：为一个事务对象进行签名，并且返回一个包含签名后16进制字符串的Promise对象。签名之后就可以使用sendTransaction方法进行事务发送到以太坊网络。
+
+      其中transcation对象包含的字段为：
+
+      ```javascript
+      let transaction ={
+          nonce : 0,//当前节点对该交易的版本号，为了避免交易重播，使用getTransactionCount()函数可以获取已知上一笔交易的nonce值
+          gasLimit : 21000,//gas最多使用限制(抵押的gas)
+          gasPrice : utils.bigNumberify("20000000000"),//gas的价格
+          
+          to : "0x88a5C2d9919e46F883EB62F7b8Dd9d0CC45bc290",
+          data : "0x",
+          value : utils.parseEther("1.0"),
+          // 保证交易不能被多个链所执行
+          chainId : ethers.utils.getNetwork('homestead').chainId
+      }
+      ```
+
+      [nonce解析](https://mp.weixin.qq.com/s?__biz=MzI0NDAzMzIyNQ==&mid=2654065324&idx=1&sn=58ff35023fa61aea3ae2782ebac06fdc&chksm=f2a6810ac5d1081c1dc2cb2e6e1f1a5d697fe936861f3c1aebb69b84d43957b8afe4f055ebc0#rd)
+
+      ```javascript
+      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+      let wallet = new ethers.Wallet(privateKey)
+      
+      console.log(wallet.address)
+      // "0x7357589f8e367c2C31F51242fB77B350A11830F3"
+      
+      // All properties are optional
+      let transaction = {
+          nonce: 0,
+          gasLimit: 21000,
+          gasPrice: utils.bigNumberify("20000000000"),
+      
+          to: "0x88a5C2d9919e46F883EB62F7b8Dd9d0CC45bc290",
+          // ... or supports ENS names
+          // to: "ricmoo.firefly.eth",
+      
+          value: utils.parseEther("1.0"),
+          data: "0x",
+      
+          // This ensures the transaction cannot be replayed on different networks
+          chainId: ethers.utils.getNetwork('homestead').chainId
+      }
+      
+      let signPromise = wallet.sign(transaction)
+      
+      signPromise.then((signedTransaction) => {
+      
+          console.log(signedTransaction);
+          // "0xf86c808504a817c8008252089488a5c2d9919e46f883eb62f7b8dd9d0cc45bc2
+          //    90880de0b6b3a76400008025a05e766fa4bbb395108dc250ec66c2f88355d240
+          //    acdc47ab5dfaad46bcf63f2a34a05b2cb6290fd8ff801d07f6767df63c1c3da7
+          //    a7b83b53cd6cea3d3075ef9597d5"
+      
+          // This can now be sent to the Ethereum network
+          let provider = ethers.getDefaultProvider()
+          provider.sendTransaction(signedTransaction).then((tx) => {
+      
+              console.log(tx);
+              // {
+              //    // These will match the above values (excluded properties are zero)
+              //    "nonce", "gasLimit", "gasPrice", "to", "value", "data", "chainId"
+              //
+              //    // These will now be present
+              //    "from", "hash", "r", "s", "v"
+              //  }
+              // Hash:
+          });
+      })
+      ```
+
+    - `prototype.signMessage(message)`：对一个消息进行签名，会返回一个包含签名后的`flat-format`串的Promise对象.
+
+      > 对于签名后得到的signature，有两种格式，即flat-format与Expanded-format(r,s,v)：
+      >
+      > 对于交易/事务签名->[签名&验证](https://zhuanlan.zhihu.com/p/30481292)
+      >
+      > [对签名结果进行处理的工具函数](https://docs.ethers.io/ethers.js/html/api-utils.html#signature)
+
+      signMessage方法可以对text类型及binary类型的数据进行签名：
+
+      如果是text类型(即string类型)的消息，它就可以直接作为UTF8 bytes传送。
+
+      如果是其它数据类型（如想传送数组类型的数据）,需要进行[arrayish](https://docs.ethers.io/ethers.js/html/api-utils.html#arrayish)操作才可以进行签名
+
+
+
+      ```javascript
+      //对text类型的数据进行签名
+      //直接返回的是一个flat-format
+      //也可以通过utils.splitSignature()函数转化为格式化输出
+      
+      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+      let wallet = new ethers.Wallet(privateKey);
+      
+      // Sign a text message
+      let signPromise = wallet.signMessage("Hello World!")
+      
+      signPromise.then((signature) => {
+      
+          // Flat-format
+          console.log(signature);
+          // "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474
+          //    301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c
+          //    1c"
+      
+          // Expanded-format
+          console.log(ethers.utils.splitSignature(signature));
+          // {
+          //   r: "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474",
+          //   s: "0x301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c",
+          //   v: 28,
+          //   recoveryParam: 1
+          //  }
+      });
+      ```
+
+      ```javascript
+      //对binary类型的数据进行签名
+      //需要先使用arrayify函数进行array化之后才可以进行签名
+      
+      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+      let wallet = new ethers.Wallet(privateKey);
+      
+      // The 66 character hex string MUST be converted to a 32-byte array first!
+      let hash = "0x3ea2f1d0abf3fc66cf29eebb70cbd4e7fe762ef8a09bcc06c8edf641230afec0";
+      let binaryData = ethers.utils.arrayify(hash);
+      
+      let signPromise = wallet.signMessage(binaryData)
+      
+      signPromise.then((signature) => {
+      
+          console.log(signature);
+          // "0x5e9b7a7bd77ac21372939d386342ae58081a33bf53479152c87c1e787c27d06b
+          //    118d3eccff0ace49891e192049e16b5210047068384772ba1fdb33bbcba58039
+          //    1c"
+      });
+      ```
+
+  - Blockchain Operations(区块链操作)：需要连接provider的wallet操作
+
+    - `prototype.getBalance([blockTag = "latest"])`：返回一个包含当前wallet的余额（表示形式->BigNumber,in wei）的Promise对象。
+
+      ```javascript
+      // We require a provider to query the network
+      let provider = ethers.getDefaultProvider();
+      
+      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+      let wallet = new ethers.Wallet(privateKey, provider);
+      
+      let balancePromise = wallet.getBalance();
+      
+      balancePromise.then((balance) => {
+          console.log(balance);
+      });
+      
+      let transactionCountPromise = wallet.getTransactionCount();
+      
+      transactionCountPromise.then((transactionCount) => {
+          console.log(transactionCount);
+      });
+      
+      ```
+
+    - `prototype.getTransactionCount([blockTag = "latest"])`：
+
+      > Returns a [Promise](https://docs.ethers.io/ethers.js/html/notes.html#promise) that resovles to the number of transactions this account has ever sent (also called the *nonce*) at the [blockTag](https://docs.ethers.io/ethers.js/html/api-providers.html#blocktag).
+
+      返回包含当前钱包交易数量->nonce值(用于下一个交易验证)的Promise对象。
+
+    - `prototype.estimateGas(transaction)`:传入一个交易对象，返回包含估算该交易的Gas值的Promise对象。
+
+    - `prototype.sendTransaction(transaction)`:
+
+      输入一个满足[Transaction Request](https://docs.ethers.io/ethers.js/html/api-providers.html#transaction-request)的transaction对象，之后返回一个包含[Transaction Response](https://docs.ethers.io/ethers.js/html/api-providers.html#transaction-response)的Promise对象。
+
+      ```javascript
+      // We require a provider to send transactions
+      let provider = ethers.getDefaultProvider();
+      
+      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+      let wallet = new ethers.Wallet(privateKey, provider);
+      
+      let amount = ethers.utils.parseEther('1.0');
+      
+      let tx = {
+          to: "0x88a5c2d9919e46f883eb62f7b8dd9d0cc45bc290",
+          // ... or supports ENS names
+          // to: "ricmoo.firefly.eth",
+      
+          // We must pass in the amount as wei (1 ether = 1e18 wei), so we
+          // use this convenience function to convert ether to wei.
+          value: ethers.utils.parseEther('1.0')
+      };
+      
+      let sendPromise = wallet.sendTransaction(tx);
+      
+      sendPromise.then((tx) => {
+          console.log(tx);
+          // {
+          //    // All transaction fields will be present
+          //    "nonce", "gasLimit", "pasPrice", "to", "value", "data",
+          //    "from", "hash", "r", "s", "v"
+          // }
+      });
+      ```
+
+  - Encrypted Json Wallet(建立加密存储的Json钱包)：
+
+    > 很多系统都提供了为本机的私钥进行加密存储的服务，它有多种不一样的加密方式及编码形式，当然它是可以供人以一定的规则进行异地导入的。
+
+    `prototype.encrypt(password,options,progressCallBack)`：对本地的钱包对象进行加密处理。
+
+    options字段选项：
+
+    - salt：
+    - iv：
+    - uuid：
+    - scrypt:
+    - entropy(助记词加密的熵):
+    - mnenomic(助记词加密的助记词本身):
+    - path(助记词加密所使用的向量):
+
+    其中的progressCallBack函数是一个加密过程监听器，在各阶段过程中返回0或1来显示加密过程状态。
 
 - Providers(供应商/节点)：
+
+  >  Provider封装了用户与区块链网络的连接，用于实现查询操作与发送签名后的状态变换事务/交易
+
+  <font color=#FF0033>EtherscanProvider与InfuraProvider</font>提供了连接公用节点的能力而不需要自己本身建立节点。
+
+  <font color=#FF0033>JsonRpcProvider与IpcProvider</font>用于手动连接已知的节点（自己的节点），支持的链类型有：mainnet,testnets,POA nodes或Ganache
+
+  如果想连接web3 应用客户端(如Metamask客户端)，可以使用<font color=#FF0033>providers.Web3Provider()</font>来进行与Web3客户端的连接。
+
+  一般情况下，我们使用<font color=#FF0033>providers.getDefaultProvider()</font>,这样就可以持续与一个EtherScan或Infura节点保持连接
+
+  例子：
+
+  - 默认情况：
+
+    ```javascript
+    // You can use any standard network name
+    //  - "homestead"
+    //  - "rinkeby"
+    //  - "ropsten"
+    //  - "kovan"
+    
+    let provider = ethers.getDefaultProvider('ropsten');
+    ```
+
+  - 连接Web3客户端：
+
+    ```javascript
+    // The network will be automatically detected; if the network is
+    // changed in MetaMask, it causes a page refresh.
+    
+    let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+    ```
+
+  Provider对象的用途：
+
+  - 用于作为连接Wallet的参数对象:
+
+    ```javascript
+    let defaultProvider = ethers.getDefaultProvider('ropsten');
+    let wallet = new Wallet(secretKey,defaultProvider);
+    ```
+
+  - 用于查询当前网络的状态：
+
+    - `prototype.getNetwork()`:返回一个包含Network对象（包含网络信息）的Promise对象。
+
+  - 用于向链上发送查询:
+
+    - `prototype.getBalance(addressOrName,[blockTag = "latest"])`:
+    - `prototype.getTransactionCount(addressOrName,[blockTag = "latest"])`:
+
+  - 用于查询合约的状态(call方法)：
+
+  - 监听链上的事件
 
 - Contracts(合约)：
 

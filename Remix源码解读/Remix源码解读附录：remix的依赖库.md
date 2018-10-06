@@ -54,7 +54,7 @@
            - results
          - error:
 
-     - vm.runTx(opts,cb)
+     - `vm.runTx(opts,cb)`
 
        运行一个事务
 
@@ -68,7 +68,7 @@
            - `vm` ： 进行vm.runCode之后的结果
          - error:返回错误
 
-     - vm.runCode(opts,cb)
+     - `vm.runCode(opts,cb)`
 
        运行EVM code
 
@@ -308,57 +308,57 @@ const serializedTx = tx.serialize()
 
 
 
-      ```javascript
-      //对text类型的数据进行签名
-      //直接返回的是一个flat-format
-      //也可以通过utils.splitSignature()函数转化为格式化输出
-      
-      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
-      let wallet = new ethers.Wallet(privateKey);
-      
-      // Sign a text message
-      let signPromise = wallet.signMessage("Hello World!")
-      
-      signPromise.then((signature) => {
-      
-          // Flat-format
-          console.log(signature);
-          // "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474
-          //    301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c
-          //    1c"
-      
-          // Expanded-format
-          console.log(ethers.utils.splitSignature(signature));
-          // {
-          //   r: "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474",
-          //   s: "0x301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c",
-          //   v: 28,
-          //   recoveryParam: 1
-          //  }
-      });
-      ```
+~~~javascript
+  //对text类型的数据进行签名
+  //直接返回的是一个flat-format
+  //也可以通过utils.splitSignature()函数转化为格式化输出
+  
+  let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+  let wallet = new ethers.Wallet(privateKey);
+  
+  // Sign a text message
+  let signPromise = wallet.signMessage("Hello World!")
+  
+  signPromise.then((signature) => {
+  
+      // Flat-format
+      console.log(signature);
+      // "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474
+      //    301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c
+      //    1c"
+  
+      // Expanded-format
+      console.log(ethers.utils.splitSignature(signature));
+      // {
+      //   r: "0xea09d6e94e52b48489bd66754c9c02a772f029d4a2f136bba9917ab3042a0474",
+      //   s: "0x301198d8c2afb71351753436b7e5a420745fed77b6c3089bbcca64113575ec3c",
+      //   v: 28,
+      //   recoveryParam: 1
+      //  }
+  });
+  ```
 
-      ```javascript
-      //对binary类型的数据进行签名
-      //需要先使用arrayify函数进行array化之后才可以进行签名
-      
-      let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
-      let wallet = new ethers.Wallet(privateKey);
-      
-      // The 66 character hex string MUST be converted to a 32-byte array first!
-      let hash = "0x3ea2f1d0abf3fc66cf29eebb70cbd4e7fe762ef8a09bcc06c8edf641230afec0";
-      let binaryData = ethers.utils.arrayify(hash);
-      
-      let signPromise = wallet.signMessage(binaryData)
-      
-      signPromise.then((signature) => {
-      
-          console.log(signature);
-          // "0x5e9b7a7bd77ac21372939d386342ae58081a33bf53479152c87c1e787c27d06b
-          //    118d3eccff0ace49891e192049e16b5210047068384772ba1fdb33bbcba58039
-          //    1c"
-      });
-      ```
+  ```javascript
+  //对binary类型的数据进行签名
+  //需要先使用arrayify函数进行array化之后才可以进行签名
+  
+  let privateKey = "0x3141592653589793238462643383279502884197169399375105820974944592"
+  let wallet = new ethers.Wallet(privateKey);
+  
+  // The 66 character hex string MUST be converted to a 32-byte array first!
+  let hash = "0x3ea2f1d0abf3fc66cf29eebb70cbd4e7fe762ef8a09bcc06c8edf641230afec0";
+  let binaryData = ethers.utils.arrayify(hash);
+  
+  let signPromise = wallet.signMessage(binaryData)
+  
+  signPromise.then((signature) => {
+  
+      console.log(signature);
+      // "0x5e9b7a7bd77ac21372939d386342ae58081a33bf53479152c87c1e787c27d06b
+      //    118d3eccff0ace49891e192049e16b5210047068384772ba1fdb33bbcba58039
+      //    1c"
+  });
+~~~
 
   - Blockchain Operations(区块链操作)：需要连接provider的wallet操作
 
@@ -492,16 +492,109 @@ const serializedTx = tx.serialize()
 
   - 用于查询当前网络的状态：
 
-    - `prototype.getNetwork()`:返回一个包含Network对象（包含网络信息）的Promise对象。
+    - `prototype.getNetwork()`:
+
+      返回一个包含Network对象（包含网络信息）的Promise对象。
 
   - 用于向链上发送查询:
 
-    - `prototype.getBalance(addressOrName,[blockTag = "latest"])`:
-    - `prototype.getTransactionCount(addressOrName,[blockTag = "latest"])`:
+    - `prototype.getBalance(addressOrName,[blockTag = "latest"])`=>Promise<BigNumber>:
 
-  - 用于查询合约的状态(call方法)：
+      查询某个地址的账户余额。
 
-  - 监听链上的事件
+      例：
+
+      ```javascript
+      let address = "0x02F024e0882B310c6734703AB9066EdD3a10C6e0";
+      
+      provider.getBalance(address).then((balance) => {
+      
+          // balance is a BigNumber (in wei); format is as a sting (in ether)
+          let etherString = ethers.utils.formatEther(balance);
+      
+          console.log("Balance: " + etherString);
+      });
+      ```
+
+      
+
+    - `prototype.getTransactionCount(addressOrName,[blockTag = "latest"])`=>Promise<number>:
+
+      查询某个地址(账户)的交易计数值(nonce)
+
+      例：
+
+      ```javascript
+      
+      ```
+
+    - `prototype.getBlockNumber()`=>Promise<number>:最近的block number
+
+    - `prototype.getGasPrice()`=>Promise<BigNumber>:返回BigNumber类型的当前Gas Price
+
+    - `prototype.getBlock(blockHashOrBlockNumber)`=>Promise<Block>:返回[Block Response](let address = "0x02F024e0882B310c6734703AB9066EdD3a10C6e0";provider.getTransactionCount(address).then((transactionCount) => {    console.log("Total Transactions Ever Sent: " + transactionCount);})对象;
+
+    - `prototype.getTransaction(transactionHash)`=>Promise<Transaction Response>:返回[Transaction Response](https://docs.ethers.io/ethers.js/html/api-providers.html#transaction-response)对象；
+
+    - `prototype.getTransactionReceipt(transactionHash)`=>Promise<TransactionReceipt>:返回[Transaction Receipts](https://docs.ethers.io/ethers.js/html/api-providers.html#transaction-receipt)对象；
+
+  - 对链上合约的操作：
+
+    - `prototype . call ( transaction ) `  =>   Promise<hex> :返回合约函数的返回值（16进制的值）<font color=#FF0033>==注意data的引入方式==</font>
+
+      ```javascript
+      // See: https://ropsten.etherscan.io/address/0x6fc21092da55b392b045ed78f4732bff3c580e2c
+      
+      // Setup a transaction to call the FireflyRegistrar.fee() function
+      
+      // FireflyRegistrar contract address
+      let address = "0x6fC21092DA55B392b045eD78F4732bff3C580e2c";
+      
+      // First 4 bytes of the hash of "fee()" for the sighash selector
+      let data = ethers.utils.hexDataSlice(ethers.utils.id('fee()'), 0, 4);
+      
+      let transaction = {
+          to: ensName,
+          data: data
+      }
+      
+      let callPromise = defaultProvider.call(transaction);
+      
+      callPromise.then((result) => {
+          console.log(result);
+          // "0x000000000000000000000000000000000000000000000000016345785d8a0000"
+      
+          console.log(ethers.utils.formatEther(result));
+          // "0.1"
+      });
+      ```
+
+      
+
+    - `prototype . estimateGas ( transaction ) `  =>   Promise<BigNumber> :返回输入transaction对象估计的Gas值
+
+    - `prototype . sendTransaction ( signedTransaction ) `  =>   Promise<TransactionResponse> :将已经签名的transaction传播到Ethereum network中并返回transaction的结果对象
+
+      ```javascript
+      let privateKey = '0x0123456789012345678901234567890123456789012345678901234567890123';
+      let wallet = new ethers.Wallet(privateKey, provider);
+      
+      let transaction = {
+          to: "ricmoo.firefly.eth",
+          value: ethers.utils.parseEther("0.1")
+      };
+      
+      // Send the transaction
+      let sendTransactionPromise = wallet.sendTransaction(transaction);
+      
+      sendTransactionPromise.then((tx) => {
+         console.log(tx);
+      });
+      ```
+
+      
+
+  - 监听链上的事件(Events)
 
 - Contracts(合约)：
 

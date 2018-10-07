@@ -598,6 +598,183 @@ const serializedTx = tx.serialize()
 
 - Contracts(合约)：
 
+  Contract(合约)是运行在以太坊区块链上的可执行程序。一个Contract(合约)包含代码本身(被称为byte code)还有长期存储的数据(被称为storage)。每一个被部署的合约有一个地址，用于外部与该合约连接。
+
+  与合约交互可以通过==call方式,sendTransaction方式,也可以通过监听合约emit的Event的方式（Event无法由Contract所监听)==
+
+  > **call合约函数的方式**：
+  >
+  > Constant-method：
+  >
+  > - 特征：无法进行add,remove,change data in the storage,log any events.只能对合约中的Constant-method进行call操作
+  > - 花费：free
+  >
+  > Non-Constant-method：
+  >
+  > - 特征：需要以transaction的方式发送，只有EOA账户（外部账户，与合约账户对应）才可以发送，需要进行挖矿确认之后才会生效，生效（操作)时间由gas price,网络状态以及矿工的优先状态决定
+  > - 花费：transaction gas
+
+  例子使用的合约：
+
+  ```javascript
+  pragma solidity ^0.4.24;
+  
+  contract SimpleStorage {
+  
+      event ValueChanged(address indexed author, string oldValue, string newValue);
+  
+      string _value;
+  
+      constructor(string value) public {
+          emit ValueChanged(msg.sender, _value, value);
+          _value = value;
+      }
+  
+      function getValue() view public returns (string) {
+          return _value;
+      }
+  
+      function setValue(string value) public {
+          emit ValueChanged(msg.sender, _value, value);
+          _value = value;
+      }
+  }
+  ```
+
+  ### 部署合约：
+
+  为了在以太坊网络中部署一个合约，可以通过合约的bytecode与Application Binary Interface(ABI)建立一个ContractFactory对象。
+
+  #### 建立一个ContractFactory对象(Creating a Contract Factory)：
+
+  - `new ethers.ContractFactory(abi,bytecode[,signer])`:
+
+    建立一个新的ContractFactory对象（可以部署的合约对象），在对象的参数中的signer表示用于部署时发送transaction的Signer对象（Wallet对象）
+
+  - `ethers.ContractFacrory.fromSolidity(complilerOutput[,signer])`:
+
+    通过Truffle根据Solidity代码编译的Truffle Json文件建立ContractFactory对象
+
+  - `prototype.connect(signer)` => ContractFactory:
+
+    根据一个已经存在的ContractFactory对象建立一个新的ContractFactory对象，但换了一个新的Signer对象。
+
+  #### Prototype:
+
+  - `prototype.bytecode`
+  - `prototype.interface`
+  - `prototype.signer`:如果返回为null,就不能调用deploy方法。
+
+  #### 连接建立对象(Connecting):
+
+  - `prototype.attach(address)` => Contract
+
+    根据指定的地址连接到指定的Contract实例，具有特定的Contract Interface及Signer(即已经部署的Contract)
+
+  #### 部署(Deployment)：
+
+  - `prototype.deploy(...)` => Promise<Contract>
+
+    发送建立当前ContractFactory指定的合约的Transaction,返回一个Contract对象。
+
+    需要注意的是，合约有可能不能立即部署完成(mined)，可以通过`contract.deployed`函数来监控部署情况，这个函数会返回一个Promise对象，在合约部署成功时返回一个resolve，失败时就会返回reject
+
+  - `prototype.getDeployTransaction(...)` => UnsignedTransaction
+
+    返回建立当前ContractFactory指定合约需要的Transaction(没有进行签名的)，一般用于进行离线签名 建立合约的transaction。
+
+  部署合约的例子：
+
+  ```javascript
+  
+  ```
+
+  
+
+  ### 连接已经部署的合约：
+
+  #### 连接合约(Connecting to a Contract)：
+
+  `new ethers.Contract(addressOrName,abi,providerOrSigner)`:
+
+  通过地址或名(addressOrName)来进行与合约的连接，交互接口通过abi设置，连接方式通过provider或Signer设置。
+
+  接口设置：[Contract ABI](https://docs.ethers.io/ethers.js/html/api-contract.html#contract-abi)
+
+  不同连接方式对合约操作权限与限制的影响：[Providers&Signers](https://docs.ethers.io/ethers.js/html/api-contract.html#providers-vs-signers)
+
+  
+
+  连接一个存在的合约：
+
+  ```javascript
+  
+  ```
+
+  Call一个只读的Constant-Method:
+
+  ```javascript
+  // Get the current value
+  let currentValue = await contract.getValue();
+  
+  console.log(currentValue);
+  // "Hello World"
+  ```
+
+  Call一个Non-Constant Method:
+
+  ```javascript
+  // A Signer from a private key
+  let privateKey = '0x0123456789012345678901234567890123456789012345678901234567890123';
+  let wallet = new ethers.Wallet(privateKey, provider);
+  
+  // Create a new instance of the Contract with a Signer, which allows
+  // update methods
+  let contractWithSigner = contract.connect(wallet);
+  // ... OR ...
+  // let contractWithSigner = new Contract(contractAddress, abi, wallet)
+  
+  // Set a new Value, which returns the transaction
+  let tx = await contractWithSigner.setValue("I like turtles.");
+  
+  // See: https://ropsten.etherscan.io/tx/0xaf0068dcf728afa5accd02172867627da4e6f946dfb8174a7be31f01b11d5364
+  console.log(tx.hash);
+  // "0xaf0068dcf728afa5accd02172867627da4e6f946dfb8174a7be31f01b11d5364"
+  
+  // The operation is NOT complete yet; we must wait until it is mined
+  await tx.wait();
+  
+  // Call the Contract's getValue() method again
+  let newValue = await contract.getValue();
+  
+  console.log(currentValue);
+  // "I like turtles."
+  ```
+
+  监听事件：
+
+  ```javascript
+  
+  ```
+
+  持续监听（Filtering an Event）：
+
+  ```javascript
+  
+  ```
+
+  
+
+  #### Prototype:
+
+  #### 合约部署状态：
+
+  ### 元类属性：
+
+  > 因为Contract对象是动态的并且是在运行时加载(loaded at runtime)，许多对象中的属性是动态改变的，由Contract ABI来决定。
+
+  
+
 - Utilities(公用模块)：
 
 ## 4. solc

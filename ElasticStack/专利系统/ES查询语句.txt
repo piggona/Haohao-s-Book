@@ -1,0 +1,36 @@
+专利检索
+POST {ES地址}/{索引名}/_search
+
+{ 
+  "_source": ["patent_uuid", "documentId", "title", "assignees.name.raw", "publishedDate", "classification.ipc.raw"],
+  "sort": 
+  #按相关度排序
+  {
+    "_score": "desc"
+  },
+  #按时间排序
+  {
+    "publishedDate" : "desc"
+  },
+  "from": .....,
+  "size": .....,
+  "query":{
+    "bool":{
+      "must":[
+        {
+          "match": {
+            "{字段名}": "{关键字,多个关键字用空格分隔}",
+            "operator": "多个关键字至少有一个用or，全都有用and"
+          }
+        },
+        .
+        .
+        .
+        .
+      ]
+    }
+  }
+}
+
+获取详情
+GET {ES地址}/{索引名}/_doc/{patent_uuid}

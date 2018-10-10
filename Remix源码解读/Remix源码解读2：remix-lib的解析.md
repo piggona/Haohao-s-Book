@@ -13,10 +13,10 @@
   - web3(0.20.6)：
 - 入口文件：
 
-## 2. 模块解读：
+## 2. 模块解读：从功能到细节
 
 - 以太坊合约工作流程：
 
-  [solidity代码]->solc编译->[EVM CODE]->ethereumjs-vm运行代码
+  [solidity代码]->solc编译->[EVM CODE]->ethereumjs-vm运行代码->同步到公链上。
 
-- 
+### 

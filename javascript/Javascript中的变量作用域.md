@@ -87,7 +87,7 @@ function foo() {
 
 不在任何函数内定义的变量就有全局作用域，所有这种变量其实都是在一个window对象中，具有全局作用域的属性(var)/方法(function)就是被绑定到window的一个属性。
 
-```
+```javascript
 'use strict';
 
 window.alert('调用window.alert()');

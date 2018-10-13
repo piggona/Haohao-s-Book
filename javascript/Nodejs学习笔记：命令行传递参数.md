@@ -83,7 +83,29 @@ console.log(argv._);
 - Deault:默认值
 - Describe:提示
 
+```javascript
+var argv = require('yargs')
+  .demand(['n'])
+  .default({n: 'tom'})
+  .describe({n: 'your name'})
+  .argv;
+
+console.log('hello ', argv.n);
 ```
 
+也可以将一个参数的配置写到一个option中：
+
+```javascript
+var argv = require('yargs')
+  .option('n', {
+    alias : 'name',
+    demand: true,
+    default: 'tom',
+    describe: 'your name',
+    type: 'string'
+  })
+  .argv;
+
+console.log('hello ', argv.n);
 ```
 

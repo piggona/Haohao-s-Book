@@ -17,7 +17,7 @@
 
 ## 1. 数据本身
 
-### 属性与属性值（Attribute&Attribute Value）
+### 属性与属性值（Attribute&Attribute Values）
 
 > 属性与属性值是不同的：
 >
@@ -33,16 +33,16 @@
 1. ##### 属性的类型：
 
    - Nominal(标称)：
-     相当于enum类型，可以列举的属性
+     相当于enum类型，可以列举的属性，没有顺序
 
    - Ordinal(序数)：
-     有序的属性
+     **有序**的属性
 
-   - Interval(区间)：
+   - Interval(区间值)：
 
      >  Example:calendar dates,tempetatures
 
-   - Ratio(比率):
+   - Ratio(标度):
 
      有一个之前的数据比较而生成的标度
 
@@ -52,16 +52,42 @@
 
    > 包含的特性有：
    >
-   > - DIstinctness:相异性
-   > - Order:有序性
-   > - Addition：加法
-   > - Multiplication:乘法
+   > - DIstinctness:相异性（等于|不等于）
+   > - Order:有序性（<,>)
+   > - Addition：加法（+，-）
+   > - Multiplication:乘法（*，/）
 
-   | 属性类型           | 特性 |
-   | ------------------ | ---- |
-   | Nominal attribute  |      |
-   | Ordinal attribute  |      |
-   | Interval attribute |      |
-   | Ratio attribute    |      |
+   | 属性类型           | 特性                        |
+   | ------------------ | --------------------------- |
+   | Nominal attribute  | distinctness                |
+   | Ordinal attribute  | distinctness&order          |
+   | Interval attribute | distinctness&order&addition |
+   | Ratio attribute    | all 4 properties            |
 
-3. 
+3. ##### 离散和连续的点(Discrete and Continuous)
+
+### 数据集的类型(Types of data sets)
+
+- #### 记录数据(Record)
+
+  - Data Matrix
+  - Document Data
+  - Transaction Data
+
+- #### 基于图形的数据(Graph)
+
+  - World Wide Web
+  - Molecular Data（分子结构）
+
+- #### 有序的数据(Ordered)
+
+  - Spatial Data（空间数据->坐标系内的）
+  - Temporal Data（时间数据）
+  - Sequential Data（顺序数据）
+  - Genetic Sequence Data（基因序列数据）
+
+#### 1. <font color=#FF0033>结构化数据</font>的重要特性
+
+#### 2. Record Data
+
+## 2. 数据预处理(Data Quality)
